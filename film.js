@@ -73,8 +73,9 @@ const notes=[];
 const walkAt=pages.find(page=>page[3][0]==='river')[0];
 const carouselAt=pages.find(page=>page[3][0]==='carousel')[0];
 const wishAt=pages.find(page=>page[1]==='About Time')[0];
-for(let i=0;16+i*2.85<wishAt;i++){
- const beat=16+i*2.85, chord=chords[i%chords.length];
+const scoreStart=16,barDuration=2.85;
+for(let i=0;scoreStart+i*barDuration<wishAt;i++){
+ const beat=scoreStart+i*barDuration, chord=chords[i%chords.length];
  const quietWalk=beat>=walkAt && beat<carouselAt;
  const playingChord=quietWalk?[chord[0],chord[2]]:chord;
  playingChord.forEach((n,j)=>notes.push([beat+.08+j*.12,n,j===0?.084:.037,2.7]));
@@ -105,6 +106,27 @@ function tone(at,note,level,length){
  osc.connect(gain).connect(master);osc.start(at);osc.stop(at+length*decay+.03);osc.onended=()=>{osc.disconnect();gain.disconnect()};
  }}
 
+// Repeat the opening eight bars on the audio clock while the filmstrip runs.
+const creditBars=chords.map((_,i)=>{
+ const start=scoreStart+i*barDuration;
+ return notes.filter(([time])=>time>=start && time<start+barDuration)
+   .map(([time,pitch,level,length])=>[time-start,pitch,level,length]);
+});
+let creditBar=0,nextBarAt=0,creditTimer;
+function queueCreditBar(){
+ if(!audio)return;
+ const now=audio.currentTime;
+ if(nextBarAt<=now+.2){
+   const at=Math.max(nextBarAt,now+.005);
+   for(const [offset,pitch,level,length] of creditBars[creditBar]){
+     tone(at+offset,pitch,level,length);
+   }
+   creditBar=(creditBar+1)%creditBars.length;
+   nextBarAt=at+barDuration;
+ }
+ creditTimer=setTimeout(queueCreditBar,Math.max(20,(nextBarAt-now-.18)*1000));
+}
+
 let inCredits=false,frameRequest=0;
 function setPaused(stop){
  running=!stop;last=performance.now();$('#pause').textContent=stop?'Resume':'Pause';
@@ -112,7 +134,11 @@ function setPaused(stop){
  if(audio){if(stop)audio.suspend();else audio.resume()}
  if(excerpt){if(stop)excerpt.pause();else playExcerpt(excerpt)}
  cancelAnimationFrame(frameRequest);
- if(running && !inCredits)frameRequest=requestAnimationFrame(frame);
+ clearTimeout(creditTimer);
+ if(running){
+   if(inCredits)queueCreditBar();
+   else frameRequest=requestAnimationFrame(frame);
+ }
 }
 
 function start(){
@@ -142,8 +168,8 @@ function showCredits(){
  $('.end').hidden=false;$('#scene').textContent='On film';
  $('#line').style.width='100%';$('#clock').textContent='∞';
  $('#replay').focus({preventScroll:true});
- if(!running)setPaused(false);
- if(audio)master.gain.setTargetAtTime(0,audio.currentTime,.26);
+ if(running)queueCreditBar();
+ else setPaused(false);
 }
 
 function frame(now){
