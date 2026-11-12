@@ -38,7 +38,7 @@
    window.removeEventListener('pageshow',onVisible);
    retry.hidden=true;
    if(!sawCountdown){showFilm();return}
-   status.textContent='零点到了。生日快乐，Luran。';
+   status.textContent='It’s midnight. Happy birthday, Luran.';
    gate.classList.add('opening');
    setTimeout(showFilm,matchMedia('(prefers-reduced-motion: reduce)').matches?0:740);
  }
@@ -56,11 +56,11 @@
      if(!response.ok || !Number.isFinite(stamp))throw Error('Clock unavailable');
      serverTime=stamp;sampledAt=performance.now();lastCount=null;
      if(stamp<target)sawCountdown=true;
-     status.textContent='留在这里，零点就开场。';
+     status.textContent='Stay here. The film opens at midnight.';
      tick();
    }catch{
      if(serverTime===null){
-       status.textContent='正在等候网络校时。';retry.hidden=false;
+       status.textContent='Checking the time. Please reconnect and try again.';retry.hidden=false;
      }
    }finally{clearTimeout(timeout);checking=false}
  }
