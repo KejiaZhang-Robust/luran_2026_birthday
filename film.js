@@ -58,12 +58,31 @@ function selectExcerpt(clip,startTime){
  if(excerpt===clip)return;
  if(excerpt){excerpt.pause();excerpt.style.visibility='hidden'}
  excerpt=clip;excerptStart=startTime;
- if(clip){clip.currentTime=Math.max(0,elapsed-startTime);playExcerpt(clip)}
+ if(clip){prepareClip(clip);clip.currentTime=Math.max(0,elapsed-startTime);playExcerpt(clip)}
 }
+function prepareClip(clip){
+ if(!clip.hasAttribute('src')){
+   clip.preload='auto';
+   clip.src=clip.dataset.src;
+ }
+}
+const sceneClips={rilakkuma,hands:handsLive,fireworks:castleLive,pool:poolLive,'toon-cake':greetings,'screen-wish':greetings};
 const frames=new Map();
-for(const name of pages.flatMap(page=>page[3])){
- const image=new Image();image.src='stills/'+name+'.jpg';image.alt=details[name][0];
- image.style.setProperty('--focus',details[name][1] || '50% 50%');frames.set(name,image);
+function photo(name){
+ if(!frames.has(name)){
+   const image=new Image();image.src='stills/'+name+'.jpg';image.alt=details[name][0];
+   image.style.setProperty('--focus',details[name][1] || '50% 50%');frames.set(name,image);
+ }
+ return frames.get(name);
+}
+async function prepareScenes(){
+ for(const page of pages){
+   if(inCredits)return;
+   const names=page[3];
+   await Promise.all(names.map(name=>photo(name).decode().catch(()=>{})));
+   const clip=sceneClips[names[0]];
+   if(clip)prepareClip(clip);
+ }
 }
 let elapsed=0,running=false,last=0,sound=true,audio,master,nextNote=0,pageIndex=-1;
 const chords=[[50,57,61,64],[47,54,57,62],[43,50,54,59],[45,52,57,61],[50,57,61,66],[43,50,54,62],[45,52,59,61],[50,57,62,66]];
@@ -132,7 +151,7 @@ function setPaused(stop){
  running=!stop;last=performance.now();$('#pause').textContent=stop?'Resume':'Pause';
  $('#screen').classList.toggle('paused',stop);
  if(audio){if(stop)audio.suspend();else audio.resume()}
- if(excerpt){if(stop)excerpt.pause();else playExcerpt(excerpt)}
+ if(excerpt){if(stop)excerpt.pause();else if(!excerpt.ended)playExcerpt(excerpt)}
  cancelAnimationFrame(frameRequest);
  clearTimeout(creditTimer);
  if(running){
@@ -141,12 +160,68 @@ function setPaused(stop){
  }
 }
 
-function start(){
+const candle=$('.flame'),openingStatus=$('#opening-status'),retryOpening=$('#retry-opening');
+const portrait=$('.portrait img');
+let openingRequest,openingUrl,slowTimer;
+function openingFailed(){
+ clearTimeout(slowTimer);
+ candle.hidden=candle.disabled=true;
+ openingStatus.textContent='The opening couldn’t load.';
+ retryOpening.hidden=false;
+}
+async function prepareOpening(){
+ const cache=openingRequest?'reload':'default';
+ openingRequest?.abort();
+ const request=new AbortController();openingRequest=request;
+ clearTimeout(slowTimer);
+ candle.hidden=candle.disabled=true;retryOpening.hidden=true;
+ openingStatus.textContent='Getting your film ready…';
+ // Allow a manual retry on a stalled connection without interrupting a slow download.
+ slowTimer=setTimeout(()=>{retryOpening.hidden=false},20000);
+ try{
+   if(portrait.complete && !portrait.naturalWidth)portrait.src='stills/birthday.jpg';
+   if(location.protocol==='file:'){
+     prepareClip(greetings);
+     if(greetings.error)greetings.load();
+   }else{
+     const response=await fetch(greetings.dataset.src,{signal:request.signal,cache});
+     if(!response.ok)throw Error('Opening download failed');
+     const blob=await response.blob();
+     if(request.signal.aborted)return;
+     if(openingUrl)URL.revokeObjectURL(openingUrl);
+     openingUrl=URL.createObjectURL(blob);
+     greetings.preload='auto';greetings.src=openingUrl;
+   }
+   await portrait.decode();
+   if(request.signal.aborted)return;
+   if(greetings.error)throw Error('Opening unavailable');
+   clearTimeout(slowTimer);
+   openingStatus.textContent='Touch the candlelight to begin.';
+   candle.hidden=candle.disabled=false;
+   retryOpening.hidden=true;
+ }catch{
+   if(!request.signal.aborted)openingFailed();
+ }
+}
+async function start(){
+ candle.disabled=true;
+ openingStatus.textContent='Starting your film…';
  const Engine=window.AudioContext||window.webkitAudioContext;
- if(Engine){audio=new Engine();master=audio.createGain();master.connect(audio.destination);master.gain.value=sound?.8:0;audio.resume()}
- $('#screen').classList.add('playing');$('.flame').disabled=true;$('#reel').hidden=false;
+ if(Engine && !audio){audio=new Engine();master=audio.createGain();master.connect(audio.destination);master.gain.value=sound?.8:0}
+ if(audio)audio.resume();
+ greetings.muted=!sound;$('#reel').hidden=false;
+ try{
+   greetings.currentTime=0;
+   await greetings.play();
+ }catch{
+   $('#reel').hidden=true;openingFailed();return;
+ }
+ excerpt=greetings;excerptStart=0;
+ $('#screen').classList.add('playing');
  $('#pause').hidden=$('#skip').hidden=false;$('#pause').focus({preventScroll:true});
- running=true;greetings.muted=!sound;selectExcerpt(greetings,0);last=performance.now();frameRequest=requestAnimationFrame(frame);
+ running=true;last=performance.now();frameRequest=requestAnimationFrame(frame);
+ prepareScenes();
+ if(document.hidden)setPaused(true);
 }
 function showCredits(){
  inCredits=true;
@@ -174,7 +249,9 @@ function showCredits(){
 
 function frame(now){
  if(!running || inCredits)return;
- elapsed+=Math.max(0,now-last)/1000;last=now;
+ if(excerpt===greetings && !greetings.ended)elapsed=greetings.currentTime;
+ else elapsed+=Math.max(0,now-last)/1000;
+ last=now;
  if(elapsed>=duration){showCredits();return}
  if(audio)while(nextNote<notes.length&&notes[nextNote][0]<=elapsed+.09){
    const [time,n,l,d,voice]=notes[nextNote++];
@@ -197,9 +274,9 @@ function frame(now){
  if(i>=0){
    const [at,scene,layout,images,caption,wash]=pages[i];
    if(i!==pageIndex){
-     const clip=({rilakkuma,hands:handsLive,fireworks:castleLive,pool:poolLive,'toon-cake':greetings,'screen-wish':greetings})[images[0]] ?? null;
+     const clip=sceneClips[images[0]] ?? null;
      selectExcerpt(clip,clip===greetings?0:at);
-     spread.dataset.layout=layout;spread.replaceChildren(...images.map(name=>frames.get(name)));
+     spread.dataset.layout=layout;spread.replaceChildren(...images.map(photo));
      $('#reel').style.setProperty('--wash',wash);$('#scene').textContent=scene;$('#caption').textContent=caption;pageIndex=i;
    }
    const fadeIn=(elapsed-at)/.48,fadeOut=((pages[i+1]?.[0]??duration)-elapsed)/.48;
@@ -217,7 +294,10 @@ function frame(now){
  $('#clock').textContent=counter(Math.floor(elapsed))+' / '+counter(duration);$('#line').style.width=elapsed/duration*100+'%';
  frameRequest=requestAnimationFrame(frame);
 }
-$('.flame').onclick=start;$('#skip').onclick=showCredits;$('#replay').onclick=()=>location.reload();
+retryOpening.onclick=prepareOpening;
+greetings.addEventListener('error',()=>{if(!$('#screen').classList.contains('playing'))openingFailed()});
+prepareOpening();
+candle.onclick=start;$('#skip').onclick=showCredits;$('#replay').onclick=()=>location.reload();
 $('#pause').onclick=()=>setPaused(running);
 $('#sound').onclick=()=>{sound=!sound;greetings.muted=!sound;$('#sound').textContent='Sound '+(sound?'on':'off');$('#sound').setAttribute('aria-pressed',sound);if(audio)master.gain.setTargetAtTime(sound?.8:0,audio.currentTime,.05)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)setPaused(true)});

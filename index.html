@@ -138,16 +138,16 @@ header .small{display:inline-flex;align-items:center}
 }
 </style>
 <main id="screen">
-<div class="cover"><div class="portrait"><img src="stills/birthday.jpg" alt="Luran beside the candle on her birthday cake last year"><button class="flame" aria-label="Touch the candle flame to start the film"><span></span></button></div></div><div id="reel" hidden><div id="spread"></div>
-<video id="greetings" class="excerpt" src="footage/greetings.mp4" playsinline preload="auto" aria-label="Birthday scenes from Betty Boop’s Birthday Party and The Little Princess"></video>
-<video id="rilakkuma" class="excerpt" src="footage/rilakkuma.mp4" playsinline muted preload="auto" aria-label="Korilakkuma nestles against Rilakkuma"></video>
-<video id="pool-live" class="excerpt" src="footage/pool-live.mp4" playsinline muted preload="auto" aria-label="Our poolside Live Photo"></video>
-<video id="hands-live" class="excerpt" src="footage/hands-live.mp4" playsinline muted preload="auto" aria-label="Our hands together"></video>
-<video id="castle-live" class="excerpt" src="footage/fireworks.mp4" playsinline muted preload="auto" aria-label="Fireworks above the castle"></video></div>
+<div class="cover"><div class="portrait"><img fetchpriority="high" src="stills/birthday.jpg" alt="Luran beside the candle on her birthday cake last year"><button class="flame" hidden disabled aria-label="Touch the candle flame to start the film"><span></span></button></div></div><div id="reel" hidden><div id="spread"></div>
+<video id="greetings" class="excerpt" data-src="footage/greetings.mp4" playsinline preload="none" aria-label="Birthday scenes from Betty Boop’s Birthday Party and The Little Princess"></video>
+<video id="rilakkuma" class="excerpt" data-src="footage/rilakkuma.mp4" playsinline muted preload="none" aria-label="Korilakkuma nestles against Rilakkuma"></video>
+<video id="pool-live" class="excerpt" data-src="footage/pool-live.mp4" playsinline muted preload="none" aria-label="Our poolside Live Photo"></video>
+<video id="hands-live" class="excerpt" data-src="footage/hands-live.mp4" playsinline muted preload="none" aria-label="Our hands together"></video>
+<video id="castle-live" class="excerpt" data-src="footage/fireworks.mp4" playsinline muted preload="none" aria-label="Fireworks above the castle"></video></div>
 <div id="balloons" aria-hidden="true" hidden><i></i><i></i><i></i><i></i><i></i></div>
 <header><span class="small"><svg class="bear-logo" viewBox="0 0 60 48" role="img" aria-label="Rilakkuma"><g fill="#bc854f" stroke="#48342b" stroke-width="1.8"><circle cx="10" cy="11" r="8"/><circle cx="50" cy="11" r="8"/></g><g fill="#ffe79b"><circle cx="10" cy="11" r="4.4"/><circle cx="50" cy="11" r="4.4"/></g><path fill="#bc854f" stroke="#48342b" stroke-width="1.8" d="M4 29C4 15 15 6 30 6s26 9 26 23c0 11-13 15-26 15S4 40 4 29Z"/><g fill="#30251f"><circle cx="18.5" cy="25" r="2.3"/><circle cx="41.5" cy="25" r="2.3"/></g><ellipse cx="30" cy="31.5" rx="8" ry="6" fill="#fff3da"/><ellipse cx="30" cy="29" rx="3" ry="1.9" fill="#33271f"/><path d="M30 30v2l-3 2m3-2 3 2" fill="none" stroke="#33271f" stroke-width="1.5" stroke-linecap="round"/></svg> <span id="dedication">For Luran</span></span><button id="sound" aria-pressed="true">Sound on</button></header>
 
-<section class="poster"><span class="small">Your birthday, one year ago.</span><h1>Afterglow</h1><p>Touch the candlelight to begin.</p></section>
+<section class="poster"><span class="small">Your birthday, one year ago.</span><h1>Afterglow</h1><p id="opening-status" role="status">Getting your film ready…</p><button id="retry-opening" hidden>Retry</button></section>
 <div id="caption" aria-live="polite"></div>
 <section class="end" hidden>
 <div class="film-window" role="group" aria-label="Photographs from our year"><div class="film-track"><div class="film-frames"></div></div></div>
@@ -155,5 +155,5 @@ header .small{display:inline-flex;align-items:center}
 </section>
 <footer><div id="line"></div><span class="small" id="scene">Last birthday</span><div class="controls"><button id="pause" hidden>Pause</button><button id="skip" hidden>Skip to wish ↗</button><span id="clock" class="small">00:00 / 01:48</span></div></footer>
 </main>
-<script src="film.js"></script>
+<script src="film.js?v=candle-opening"></script>
 </html>
