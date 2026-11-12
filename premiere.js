@@ -14,7 +14,7 @@
    gate.replaceWith(document.querySelector('#film-content').content);
    document.querySelector('#film-content').remove();
    const script=document.createElement('script');
-   script.src='film.js?v=candle-opening';
+   script.src='film.js?v=mirror-smile';
    script.onerror=()=>{
      const message=document.querySelector('#opening-status'),button=document.querySelector('#retry-opening');
      message.textContent='The opening couldn’t load.';

@@ -18,9 +18,8 @@ const pages = [
  [42,'In the frame','solo',['star'],'','#273c32'],
  [45,'Graduation day','solo',['graduation'],'','#273c32'],
  [49,'In the blue','solo',['pool'],'','#233d45'],
- [52.5,'An afternoon out','solo',['park-together'],'','#233d45'],
- [56,'Just us','solo',['mirror-together'],'','#493937'],
- [59.5,'By the window','prints',['roses','flowers'],'','#493937'],
+ [52.5,'Just us','solo',['mirror-smile'],'','#493937'],
+ [57.5,'By the window','prints',['roses','flowers'],'','#493937'],
  [64,'A table for two','solo',['lunch'],'','#413630'],
  [67,'Afternoon tea','prints',['tea','cake-table'],'','#413630'],
  [72,'An evening walk','solo',['river'],'I love walking with you when neither of us has anywhere to be.','#473a35'],
@@ -43,7 +42,7 @@ const details={
  'campus-lantern':['Luran with a painted lantern at the Mid-Autumn Festival'],
  'little-bear':['A tiny bear in our hands'],bear:['A portrait beside a much bigger bear','32% 50%'],
  sign:['Pointing to a sign beneath the leaves','46% 48%'],star:['A chalk star above her hand','50% 34%'],graduation:['Graduation day','50% 42%'],
- 'mirror-together':['A mirror selfie together in the warm light'],'park-together':['Standing together on the path in the park'],
+ 'mirror-smile':['Luran smiling beside me in the mirror'],
  pool:['Together by the blue water'],
  roses:['A bouquet by the window','50% 72%'],flowers:['Holding the bouquet','50% 45%'],
  tea:['Afternoon tea by the window','50% 65%'],lunch:['Lunch for two','50% 58%'],'cake-table':['Two cakes and drinks','50% 65%'],
@@ -234,7 +233,7 @@ function showCredits(){
  selectExcerpt(null,0);$('#reel').hidden=true;$('.cover').style.visibility='hidden';
  $('#caption').textContent='';balloons.hidden=true;$('#skip').hidden=true;
  // Start on the sunset that closes the film, then wind back through the year.
- const photos=['sunset','drive','drive-together','coffee-stop','cat','little-bear','graduation','pool','park-together','mirror-together','flowers','tea','river','campus-lantern','carousel','fireworks','hands','birthday'];
+ const photos=['sunset','drive','drive-together','coffee-stop','cat','little-bear','graduation','pool','mirror-smile','flowers','tea','river','campus-lantern','carousel','fireworks','hands','birthday'];
  const strip=$('.film-frames');
  for(const name of photos){
    const photo=new Image();
