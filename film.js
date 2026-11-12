@@ -44,7 +44,7 @@ const details={
  'little-bear':['A tiny bear in our hands'],bear:['A portrait beside a much bigger bear','32% 50%'],
  sign:['Pointing to a sign beneath the leaves','46% 48%'],star:['A chalk star above her hand','50% 34%'],graduation:['Graduation day','50% 42%'],
  'mirror-together':['A mirror selfie together in the warm light'],'park-together':['Standing together on the path in the park'],
- pool:['Together by the blue water'],park:['A selfie at the park'],mirror:['Together in the mirror','50% 48%'],
+ pool:['Together by the blue water'],
  roses:['A bouquet by the window','50% 72%'],flowers:['Holding the bouquet','50% 45%'],
  tea:['Afternoon tea by the window','50% 65%'],lunch:['Lunch for two','50% 58%'],'cake-table':['Two cakes and drinks','50% 65%'],
  river:['Together by the riverside at dusk'],'night-drinks':['Two glasses beneath violet lights','52% 58%'],
@@ -234,7 +234,7 @@ function showCredits(){
  selectExcerpt(null,0);$('#reel').hidden=true;$('.cover').style.visibility='hidden';
  $('#caption').textContent='';balloons.hidden=true;$('#skip').hidden=true;
  // Start on the sunset that closes the film, then wind back through the year.
- const photos=['sunset','drive','drive-together','coffee-stop','cat','little-bear','graduation','pool','park-together','mirror-together','flowers','tea','river','campus-lantern','carousel','fireworks','park','mirror','hands','birthday'];
+ const photos=['sunset','drive','drive-together','coffee-stop','cat','little-bear','graduation','pool','park-together','mirror-together','flowers','tea','river','campus-lantern','carousel','fireworks','hands','birthday'];
  const strip=$('.film-frames');
  for(const name of photos){
    const photo=new Image();
