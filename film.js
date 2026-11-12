@@ -27,13 +27,13 @@ const pages = [
  [81,'Castle lights','film',['show-blue','show-gold','show-fountains'],'','#302b47'],
  [85,'Fireworks','solo',['fireworks'],'','#302b47'],
  [89,'On film','solo',['prints'],'I keep coming back to this one.','#32313b'],
- [94,'About Time','solo',['streetlight'],'I hope this year is kind to you.','#25262a'],
+ [94,'WALL·E','solo',['wall-e'],'I hope this year is kind to you.','#25262a'],
  [97.5,'Hand in hand','solo',['hands'],'','#372f32'],
  [101.5,'This birthday','solo',['sunset'],'And on the days it isn’t, I’ll walk you home.','#42322a']
 ];
 const duration=108;
 const details={
- fireworks:['Golden fireworks above the castle'],streetlight:['Mary smiles at Tim on a quiet London street'],hands:['Our hands resting together, wearing matching rings'],
+ fireworks:['Golden fireworks above the castle'],'wall-e':['WALL·E and EVE clasp hands'],hands:['Our hands resting together, wearing matching rings'],
  'toon-cake':['Candles on Betty Boop’s birthday cake'],'screen-wish':['A birthday gift in The Little Princess'],
  lamp:['Reading by the window at night'],drive:['Taking a photo from the passenger seat','72% 50%'],cat:['Stopping to photograph an orange cat'],
  'little-bear':['A tiny bear in our hands'],bear:['A portrait beside a much bigger bear','32% 50%'],
@@ -48,7 +48,7 @@ const details={
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const balloons=$('#balloons'),shapes=[...balloons.children],spread=$('#spread');
 const counter=t=>String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0');
-const greetings=$('#greetings'),streetlight=$('#streetlight'),poolLive=$('#pool-live'),handsLive=$('#hands-live'),castleLive=$('#castle-live');
+const greetings=$('#greetings'),wallE=$('#wall-e'),poolLive=$('#pool-live'),handsLive=$('#hands-live'),castleLive=$('#castle-live');
 let excerpt=null,excerptStart=0;
 function playExcerpt(clip){
  const attempt=clip.play();
@@ -72,7 +72,7 @@ const notes=[];
 // Leave room for the dialogue, then let the score follow the photographs.
 const walkAt=pages.find(page=>page[3][0]==='river')[0];
 const carouselAt=pages.find(page=>page[3][0]==='carousel')[0];
-const wishAt=pages.find(page=>page[1]==='About Time')[0];
+const wishAt=pages.find(page=>page[3][0]==='wall-e')[0];
 const scoreStart=16,barDuration=2.85;
 for(let i=0;scoreStart+i*barDuration<wishAt;i++){
  const beat=scoreStart+i*barDuration, chord=chords[i%chords.length];
@@ -197,19 +197,22 @@ function frame(now){
  if(i>=0){
    const [at,scene,layout,images,caption,wash]=pages[i];
    if(i!==pageIndex){
-     const clip=({streetlight,hands:handsLive,fireworks:castleLive,pool:poolLive,'toon-cake':greetings,'screen-wish':greetings})[images[0]] ?? null;
+     const clip=({'wall-e':wallE,hands:handsLive,fireworks:castleLive,pool:poolLive,'toon-cake':greetings,'screen-wish':greetings})[images[0]] ?? null;
      selectExcerpt(clip,clip===greetings?0:at);
      spread.dataset.layout=layout;spread.replaceChildren(...images.map(name=>frames.get(name)));
      $('#reel').style.setProperty('--wash',wash);$('#scene').textContent=scene;$('#caption').textContent=caption;pageIndex=i;
    }
-   const opacity=Math.min(1,(elapsed-at)/.48,((pages[i+1]?.[0]??duration)-elapsed)/.48);
+   const fadeIn=(elapsed-at)/.48,fadeOut=((pages[i+1]?.[0]??duration)-elapsed)/.48;
+   const opacity=Math.min(1,fadeIn,fadeOut);
+   // Match the animated clasp directly to the rings, without a fade through black.
+   const pictureOpacity=images[0]==='wall-e'?Math.min(1,fadeIn):images[0]==='hands'?Math.min(1,fadeOut):opacity;
    const moving=excerpt && excerpt.readyState>=2 && (!excerpt.paused || excerpt.ended);
    if(moving){
      const target=elapsed-excerptStart;
      if(!excerpt.seeking && target<excerpt.duration-.2 && Math.abs(excerpt.currentTime-target)>.45)excerpt.currentTime=target;
-     excerpt.style.visibility='visible';excerpt.style.opacity=opacity;
+     excerpt.style.visibility='visible';excerpt.style.opacity=pictureOpacity;
    }
-   spread.style.opacity=moving?0:opacity;$('#caption').style.opacity=opacity;
+   spread.style.opacity=moving?0:pictureOpacity;$('#caption').style.opacity=opacity;
  }
  $('#clock').textContent=counter(Math.floor(elapsed))+' / '+counter(duration);$('#line').style.width=elapsed/duration*100+'%';
  frameRequest=requestAnimationFrame(frame);
