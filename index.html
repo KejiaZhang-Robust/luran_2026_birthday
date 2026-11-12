@@ -8,7 +8,7 @@ async function openFilm(){
  try{
  const bytes=Uint8Array.from(atob(part.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));
  const key=await crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['decrypt']);
- const response=await fetch('screening.bin?v=3b7dd1b5a3d6');
+ const response=await fetch('screening.bin?v=4b6d32356874');
  if(!response.ok)throw Error();
  const data=new Uint8Array(await response.arrayBuffer());
  const result=await crypto.subtle.decrypt({name:'AES-GCM',iv:data.slice(0,12)},key,data.slice(12));
