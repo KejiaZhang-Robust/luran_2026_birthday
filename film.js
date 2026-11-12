@@ -65,52 +65,63 @@ for(const name of pages.flatMap(page=>page[3])){
  const image=new Image();image.src='stills/'+name+'.jpg';image.alt=details[name][0];
  image.style.setProperty('--focus',details[name][1] || '50% 50%');frames.set(name,image);
 }
-const song=$('#song');
-const songCue=pages.find(page=>page[3][0]==='lamp')[0];
-let elapsed=0,running=false,last=0,sound=true,pageIndex=-1;
-let inCredits=false,songStarted=false,frameRequest=0;
-
-let musicUnavailable=false;
-
-function showMusicRetry(){
- musicUnavailable=true;
- if(songStarted && sound)$('#sound').textContent='Retry music';
+let elapsed=0,running=false,last=0,sound=true,audio,master,nextNote=0,pageIndex=-1;
+const chords=[[50,57,61,64],[47,54,57,62],[43,50,54,59],[45,52,57,61],[50,57,61,66],[43,50,54,62],[45,52,59,61],[50,57,62,66]];
+const melody=[69,73,76,74,71,69,73,74];
+const notes=[];
+// Leave room for the dialogue, then let the score follow the photographs.
+const walkAt=pages.find(page=>page[3][0]==='river')[0];
+const carouselAt=pages.find(page=>page[3][0]==='carousel')[0];
+const wishAt=pages.find(page=>page[1]==='About Time')[0];
+for(let i=0;16+i*2.85<wishAt;i++){
+ const beat=16+i*2.85, chord=chords[i%chords.length];
+ const quietWalk=beat>=walkAt && beat<carouselAt;
+ const playingChord=quietWalk?[chord[0],chord[2]]:chord;
+ playingChord.forEach((n,j)=>notes.push([beat+.08+j*.12,n,j===0?.084:.037,2.7]));
+ notes.push([beat+1.05,melody[i%8],quietWalk?.052:.078,2.5]);
+ if(!quietWalk && i%2===0)notes.push([beat+2.04,chord[2]+12,.043,1.85]);
+ if(beat>=carouselAt)notes.push([beat,chord[0],.032,2.8,'bow']);
 }
-
-song.addEventListener('error',showMusicRetry);
-
-function playSong(){
- song.play().catch(error=>{
-   if(error.name!=='AbortError')showMusicRetry();
- });
+// Resolve the last phrase once, with a little silence after the last note.
+for(const [delay,pitch,level] of [[0,50,.071],[.18,57,.046],[1.3,69,.081],[3.5,66,.064],[5.2,64,.058],[7.45,50,.07],[7.7,57,.042],[8.05,62,.072]]){
+ notes.push([wishAt+delay,pitch,level,3.6]);
 }
-
-function cueSong(){
- if(songStarted)return;
- songStarted=true;
- playSong();
+notes.sort((left,right)=>left[0]-right[0]);
+function bowedNote(at,note,level,length){
+ const oscillator=audio.createOscillator(), envelope=audio.createGain();
+ oscillator.type='triangle';oscillator.frequency.value=440*2**((note-69)/12);
+ envelope.gain.setValueAtTime(.0001,at);
+ envelope.gain.linearRampToValueAtTime(level,at+.75);
+ envelope.gain.exponentialRampToValueAtTime(.0001,at+length);
+ oscillator.connect(envelope).connect(master);
+ oscillator.start(at);oscillator.stop(at+length+.02);
+ oscillator.onended=()=>{oscillator.disconnect();envelope.disconnect()};
 }
+function tone(at,note,level,length){
+ const freq=440*Math.pow(2,(note-69)/12);
+ for(const [multiple,amp,decay] of [[1,1,1],[2,.37,.65],[3,.12,.4]]){
+ const osc=audio.createOscillator(),gain=audio.createGain();osc.frequency.value=freq*multiple;
+ gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(level*amp,at+.019);gain.gain.exponentialRampToValueAtTime(.0001,at+length*decay);
+ osc.connect(gain).connect(master);osc.start(at);osc.stop(at+length*decay+.03);osc.onended=()=>{osc.disconnect();gain.disconnect()};
+ }}
 
+let inCredits=false,frameRequest=0;
 function setPaused(stop){
  running=!stop;last=performance.now();$('#pause').textContent=stop?'Resume':'Pause';
  $('#screen').classList.toggle('paused',stop);
- if(songStarted){if(stop)song.pause();else playSong()}
+ if(audio){if(stop)audio.suspend();else audio.resume()}
  if(excerpt){if(stop)excerpt.pause();else playExcerpt(excerpt)}
  cancelAnimationFrame(frameRequest);
  if(running && !inCredits)frameRequest=requestAnimationFrame(frame);
 }
 
 function start(){
- // Unlock this media element with the candle tap for its later musical cue.
- song.muted=!sound;
- playSong();
- song.pause();
+ const Engine=window.AudioContext||window.webkitAudioContext;
+ if(Engine){audio=new Engine();master=audio.createGain();master.connect(audio.destination);master.gain.value=sound?.8:0;audio.resume()}
  $('#screen').classList.add('playing');$('.flame').disabled=true;$('#reel').hidden=false;
  $('#pause').hidden=$('#skip').hidden=false;$('#pause').focus({preventScroll:true});
- greetings.muted=!sound;selectExcerpt(greetings,0);
- running=true;last=performance.now();frameRequest=requestAnimationFrame(frame);
+ running=true;greetings.muted=!sound;selectExcerpt(greetings,0);last=performance.now();frameRequest=requestAnimationFrame(frame);
 }
-
 function showCredits(){
  inCredits=true;
  selectExcerpt(null,0);$('#reel').hidden=true;$('.cover').style.visibility='hidden';
@@ -132,14 +143,18 @@ function showCredits(){
  $('#line').style.width='100%';$('#clock').textContent='∞';
  $('#replay').focus({preventScroll:true});
  if(!running)setPaused(false);
- cueSong();
+ if(audio)master.gain.setTargetAtTime(0,audio.currentTime,.26);
 }
 
 function frame(now){
  if(!running || inCredits)return;
  elapsed+=Math.max(0,now-last)/1000;last=now;
  if(elapsed>=duration){showCredits();return}
- if(elapsed>=songCue)cueSong();
+ if(audio)while(nextNote<notes.length&&notes[nextNote][0]<=elapsed+.09){
+   const [time,n,l,d,voice]=notes[nextNote++];
+   const playNote=voice==='bow'?bowedNote:tone;
+   playNote(audio.currentTime+Math.max(.005,time-elapsed),n,l,d)
+ }
  const cover=$('.cover');
  if(elapsed<1.1){
    cover.style.setProperty('--intro-visibility','visible');
@@ -175,14 +190,5 @@ function frame(now){
 }
 $('.flame').onclick=start;$('#skip').onclick=showCredits;$('#replay').onclick=()=>location.reload();
 $('#pause').onclick=()=>setPaused(running);
-$('#sound').onclick=()=>{
- if(musicUnavailable && songStarted && sound){
-   musicUnavailable=false;
-   if(song.error)song.load();
-   if(running)playSong();
- }else{sound=!sound}
- greetings.muted=song.muted=!sound;
- $('#sound').textContent='Sound '+(sound?'on':'off');
- $('#sound').setAttribute('aria-pressed',sound);
-};
+$('#sound').onclick=()=>{sound=!sound;greetings.muted=!sound;$('#sound').textContent='Sound '+(sound?'on':'off');$('#sound').setAttribute('aria-pressed',sound);if(audio)master.gain.setTargetAtTime(sound?.8:0,audio.currentTime,.05)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)setPaused(true)});
