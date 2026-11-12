@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Afterglow</title>
+<style>html{background:#100c10;color:#eee2d5;font:16px Georgia,serif}body{margin:0;display:grid;align-content:center;justify-content:center;height:100svh}h1{margin:0;font:italic 76px Baskerville,Georgia,serif;letter-spacing:-.07em}p{max-width:85vw}</style>
+<h1>Afterglow</h1><p role="status">Opening the screening…</p>
+<script>
+async function openFilm(){
+ const part=location.hash.slice(1),status=document.querySelector('p');
+ if(!part){status.textContent='Open your invitation link to watch the film.';return}
+ try{
+ const bytes=Uint8Array.from(atob(part.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));
+ const key=await crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['decrypt']);
+ const response=await fetch('screening.bin');
+ if(!response.ok)throw Error();
+ const data=new Uint8Array(await response.arrayBuffer());
+ const result=await crypto.subtle.decrypt({name:'AES-GCM',iv:data.slice(0,12)},key,data.slice(12));
+ document.open();document.write(new TextDecoder().decode(result));document.close();
+ }catch{status.textContent='Couldn’t open this screening. Check the full invitation link and try again.'}
+}
+openFilm();
+</script></html>
