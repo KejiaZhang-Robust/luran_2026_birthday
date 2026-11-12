@@ -65,75 +65,109 @@ for(const name of pages.flatMap(page=>page[3])){
  const image=new Image();image.src='stills/'+name+'.jpg';image.alt=details[name][0];
  image.style.setProperty('--focus',details[name][1] || '50% 50%');frames.set(name,image);
 }
-let elapsed=0,running=false,last=0,sound=true,audio,master,nextNote=0,pageIndex=-1;
-const chords=[[50,57,61,64],[47,54,57,62],[43,50,54,59],[45,52,57,61],[50,57,61,66],[43,50,54,62],[45,52,59,61],[50,57,62,66]];
-const melody=[69,73,76,74,71,69,73,74];
-const notes=[];
-// Leave room for the dialogue, then let the score follow the photographs.
-const walkAt=pages.find(page=>page[3][0]==='river')[0];
-const carouselAt=pages.find(page=>page[3][0]==='carousel')[0];
-const wishAt=pages.find(page=>page[1]==='About Time')[0];
-for(let i=0;16+i*2.85<wishAt;i++){
- const beat=16+i*2.85, chord=chords[i%chords.length];
- const quietWalk=beat>=walkAt && beat<carouselAt;
- const playingChord=quietWalk?[chord[0],chord[2]]:chord;
- playingChord.forEach((n,j)=>notes.push([beat+.08+j*.12,n,j===0?.084:.037,2.7]));
- notes.push([beat+1.05,melody[i%8],quietWalk?.052:.078,2.5]);
- if(!quietWalk && i%2===0)notes.push([beat+2.04,chord[2]+12,.043,1.85]);
- if(beat>=carouselAt)notes.push([beat,chord[0],.032,2.8,'bow']);
+const song=$('#song');
+const songCue=pages.find(page=>page[3][0]==='lamp')[0];
+let elapsed=0,running=false,last=0,sound=true,pageIndex=-1;
+let inCredits=false,songStarted=false,frameRequest=0;
+
+// The label serves the About Time recording as HLS with a separate audio rendition.
+const soundtrackUrl='https://hls.universal-music.de/get?id=328726';
+let stream=null,musicUnavailable=false;
+
+function showMusicRetry(){
+ musicUnavailable=true;
+ if(songStarted && sound)$('#sound').textContent='Retry music';
 }
-// Resolve the last phrase once, with a little silence after the last note.
-for(const [delay,pitch,level] of [[0,50,.071],[.18,57,.046],[1.3,69,.081],[3.5,66,.064],[5.2,64,.058],[7.45,50,.07],[7.7,57,.042],[8.05,62,.072]]){
- notes.push([wishAt+delay,pitch,level,3.6]);
+
+async function loadSong(){
+ try{
+   const response=await fetch(soundtrackUrl,{cache:'no-store'});
+   if(!response.ok)throw Error('Music unavailable');
+   const manifest=await response.text();
+   const audioLine=manifest.split('\n').find(line=>line.startsWith('#EXT-X-MEDIA:TYPE=AUDIO,'));
+   const rendition=audioLine?.match(/URI="([^"]+)"/);
+   const url=rendition?new URL(rendition[1],response.url).href:response.url;
+   if(song.canPlayType('application/vnd.apple.mpegurl')){
+     song.src=url;
+   }else{
+     const {default:Hls}=await import('https://cdn.jsdelivr.net/npm/hls.js@1.7.4/dist/hls.light.mjs');
+     stream?.destroy();
+     stream=new Hls({enableWorker:false,backBufferLength:Infinity,maxBufferLength:180});
+     stream.on(Hls.Events.ERROR,(_event,data)=>{if(data.fatal)showMusicRetry()});
+     stream.loadSource(url);
+     stream.attachMedia(song);
+   }
+   if(running && songStarted)playSong();
+ }catch{showMusicRetry()}
 }
-notes.sort((left,right)=>left[0]-right[0]);
-function bowedNote(at,note,level,length){
- const oscillator=audio.createOscillator(), envelope=audio.createGain();
- oscillator.type='triangle';oscillator.frequency.value=440*2**((note-69)/12);
- envelope.gain.setValueAtTime(.0001,at);
- envelope.gain.linearRampToValueAtTime(level,at+.75);
- envelope.gain.exponentialRampToValueAtTime(.0001,at+length);
- oscillator.connect(envelope).connect(master);
- oscillator.start(at);oscillator.stop(at+length+.02);
- oscillator.onended=()=>{oscillator.disconnect();envelope.disconnect()};
+song.addEventListener('error',showMusicRetry);
+loadSong();
+
+function playSong(){
+ if(!song.currentSrc && !song.src){
+   if(musicUnavailable)showMusicRetry();
+   return;
+ }
+ song.play().catch(error=>{
+   if(error.name!=='AbortError')showMusicRetry();
+ });
 }
-function tone(at,note,level,length){
- const freq=440*Math.pow(2,(note-69)/12);
- for(const [multiple,amp,decay] of [[1,1,1],[2,.37,.65],[3,.12,.4]]){
- const osc=audio.createOscillator(),gain=audio.createGain();osc.frequency.value=freq*multiple;
- gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(level*amp,at+.019);gain.gain.exponentialRampToValueAtTime(.0001,at+length*decay);
- osc.connect(gain).connect(master);osc.start(at);osc.stop(at+length*decay+.03);osc.onended=()=>{osc.disconnect();gain.disconnect()};
- }}
+
+function cueSong(){
+ if(songStarted)return;
+ songStarted=true;
+ playSong();
+}
 
 function setPaused(stop){
  running=!stop;last=performance.now();$('#pause').textContent=stop?'Resume':'Pause';
- if(audio){if(stop)audio.suspend();else audio.resume()}
+ $('#screen').classList.toggle('paused',stop);
+ if(songStarted){if(stop)song.pause();else playSong()}
  if(excerpt){if(stop)excerpt.pause();else playExcerpt(excerpt)}
- if(running)requestAnimationFrame(frame);
+ cancelAnimationFrame(frameRequest);
+ if(running && !inCredits)frameRequest=requestAnimationFrame(frame);
 }
+
 function start(){
- const Engine=window.AudioContext||window.webkitAudioContext;
- if(Engine){audio=new Engine();master=audio.createGain();master.connect(audio.destination);master.gain.value=sound?.8:0;audio.resume()}
+ // Unlock this media element with the candle tap for its later musical cue.
+ song.muted=!sound;
+ playSong();
+ song.pause();
  $('#screen').classList.add('playing');$('.flame').disabled=true;$('#reel').hidden=false;
  $('#pause').hidden=$('#skip').hidden=false;$('#pause').focus({preventScroll:true});
- running=true;greetings.muted=!sound;selectExcerpt(greetings,0);last=performance.now();requestAnimationFrame(frame);
+ greetings.muted=!sound;selectExcerpt(greetings,0);
+ running=true;last=performance.now();frameRequest=requestAnimationFrame(frame);
 }
-function finish(){
- selectExcerpt(null,0);running=false;elapsed=duration;$('#reel').hidden=true;$('.cover').style.visibility='hidden';
- $('#caption').textContent='';balloons.hidden=true;$('#pause').hidden=$('#skip').hidden=true;
- $('.end').hidden=false;$('#scene').textContent='Until next year';
- $('#line').style.width='100%';$('#clock').textContent=counter(duration)+' / '+counter(duration);$('#replay').focus({preventScroll:true});
- if(audio)master.gain.setTargetAtTime(0,audio.currentTime,.26);
-}
-function frame(now){
- if(!running)return;
- elapsed+=Math.max(0,now-last)/1000;last=now;
- if(elapsed>=duration){finish();return}
- if(audio)while(nextNote<notes.length&&notes[nextNote][0]<=elapsed+.09){
-   const [time,n,l,d,voice]=notes[nextNote++];
-   const playNote=voice==='bow'?bowedNote:tone;
-   playNote(audio.currentTime+Math.max(.005,time-elapsed),n,l,d)
+
+function showCredits(){
+ inCredits=true;
+ selectExcerpt(null,0);$('#reel').hidden=true;$('.cover').style.visibility='hidden';
+ $('#caption').textContent='';balloons.hidden=true;$('#skip').hidden=true;
+ // Start on the sunset that closes the film, then wind back through the year.
+ const photos=['sunset','drive','cat','little-bear','graduation','pool','mirror','flowers','tea','river','carousel','fireworks','hands','birthday'];
+ const strip=$('.film-frames');
+ for(const name of photos){
+   const photo=new Image();
+   photo.src='stills/'+name+'.jpg';
+   photo.alt=details[name]?.[0] || 'Luran beside her birthday cake';
+   strip.append(photo);
  }
+ const copy=strip.cloneNode(true);
+ copy.setAttribute('aria-hidden','true');
+ strip.after(copy);
+ $('.film-track').style.setProperty('--frames',photos.length);
+ $('.end').hidden=false;$('#scene').textContent='On film';
+ $('#line').style.width='100%';$('#clock').textContent='∞';
+ $('#replay').focus({preventScroll:true});
+ if(!running)setPaused(false);
+ cueSong();
+}
+
+function frame(now){
+ if(!running || inCredits)return;
+ elapsed+=Math.max(0,now-last)/1000;last=now;
+ if(elapsed>=duration){showCredits();return}
+ if(elapsed>=songCue)cueSong();
  const cover=$('.cover');
  if(elapsed<1.1){
    cover.style.setProperty('--intro-visibility','visible');
@@ -165,9 +199,18 @@ function frame(now){
    spread.style.opacity=moving?0:opacity;$('#caption').style.opacity=opacity;
  }
  $('#clock').textContent=counter(Math.floor(elapsed))+' / '+counter(duration);$('#line').style.width=elapsed/duration*100+'%';
- requestAnimationFrame(frame);
+ frameRequest=requestAnimationFrame(frame);
 }
-$('.flame').onclick=start;$('#skip').onclick=finish;$('#replay').onclick=()=>location.reload();
+$('.flame').onclick=start;$('#skip').onclick=showCredits;$('#replay').onclick=()=>location.reload();
 $('#pause').onclick=()=>setPaused(running);
-$('#sound').onclick=()=>{sound=!sound;greetings.muted=!sound;$('#sound').textContent='Sound '+(sound?'on':'off');$('#sound').setAttribute('aria-pressed',sound);if(audio)master.gain.setTargetAtTime(sound?.8:0,audio.currentTime,.05)};
+$('#sound').onclick=()=>{
+ if(musicUnavailable && songStarted && sound){
+   musicUnavailable=false;
+   if(song.error || !song.currentSrc || stream)loadSong();
+   else if(running)playSong();
+ }else{sound=!sound}
+ greetings.muted=song.muted=!sound;
+ $('#sound').textContent='Sound '+(sound?'on':'off');
+ $('#sound').setAttribute('aria-pressed',sound);
+};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)setPaused(true)});
