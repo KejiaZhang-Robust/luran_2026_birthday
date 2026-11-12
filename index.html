@@ -137,6 +137,30 @@ header .small{display:inline-flex;align-items:center}
  .film-track{animation-timing-function:steps(var(--frames),end)}
 }
 </style>
+<link rel="stylesheet" href="premiere.css">
+<section id="premiere" lang="zh-HK" aria-labelledby="premiere-title">
+  <div class="invitation">
+    <div class="projection-booth" role="img" aria-label="轻松熊和小白熊在放映机旁等待开场"></div>
+    <div class="ticket-copy">
+      <p class="ticket-kicker"><i aria-hidden="true"></i> 午夜首映票</p>
+      <h1 id="premiere-title">Afterglow</h1>
+      <p class="ticket-dedication">给 Luran 的生日放映</p>
+      <div class="count-line">
+        <span id="count-label">距离开场</span>
+        <div class="digits" role="timer" aria-labelledby="count-label">
+          <span><b id="hours">––</b><small>时</small></span><em>:</em>
+          <span><b id="minutes">––</b><small>分</small></span><em>:</em>
+          <span><b id="seconds">––</b><small>秒</small></span>
+        </div>
+      </div>
+      <time id="showtime" datetime="2026-11-13T00:00:00+08:00">11 月 13 日 · 00:00 香港时间</time>
+    </div>
+    <div class="ticket-stub" aria-hidden="true">ADMIT ONE</div>
+  </div>
+  <p id="door-status" role="status">留在这里，零点就开场。</p>
+  <button id="retry-clock" type="button" hidden>重新校时</button>
+</section>
+<template id="film-content">
 <main id="screen">
 <div class="cover"><div class="portrait"><img fetchpriority="high" src="stills/birthday.jpg" alt="Luran beside the candle on her birthday cake last year"><button class="flame" hidden disabled aria-label="Touch the candle flame to start the film"><span></span></button></div></div><div id="reel" hidden><div id="spread"></div>
 <video id="greetings" class="excerpt" data-src="footage/greetings.mp4" playsinline preload="none" aria-label="Birthday scenes from Betty Boop’s Birthday Party and The Little Princess"></video>
@@ -155,5 +179,6 @@ header .small{display:inline-flex;align-items:center}
 </section>
 <footer><div id="line"></div><span class="small" id="scene">Last birthday</span><div class="controls"><button id="pause" hidden>Pause</button><button id="skip" hidden>Skip to wish ↗</button><span id="clock" class="small">00:00 / 01:48</span></div></footer>
 </main>
-<script src="film.js?v=candle-opening"></script>
+</template>
+<script src="premiere.js"></script>
 </html>

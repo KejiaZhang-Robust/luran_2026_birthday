@@ -1,0 +1,43 @@
+#premiere{
+  --cream:#f2dfb9;--ink:#51232a;--rule:#ab805a80;
+  box-sizing:border-box;min-height:100svh;padding:clamp(28px,6vw,80px) 6vw;
+  display:grid;align-content:center;justify-items:center;
+  color:var(--cream);background:radial-gradient(ellipse at 27% 34%,#592526 0,transparent 58%),linear-gradient(145deg,#30141c,#160e15 76%);
+  font-family:'Avenir Next','PingFang HK','PingFang SC',sans-serif;
+}
+.invitation{
+  width:min(912px,100%);display:grid;grid-template-columns:minmax(0,.87fr) minmax(0,1.12fr) 42px;
+  color:var(--ink);background:linear-gradient(104deg,#f7e9ce 33%,#eed6ad 100%);
+  filter:drop-shadow(0 18px 22px #08040660);
+  transition:transform .7s ease,opacity .7s ease;
+}
+.projection-booth{background:#311e1b url('stills/midnight-booth.webp') center 53% / cover no-repeat}
+.ticket-copy{padding:clamp(26px,4.8vw,64px) clamp(22px,3.8vw,48px);min-width:0}
+.ticket-kicker{display:flex;align-items:center;gap:9px;margin:0;color:#7a3541;font-size:13px;letter-spacing:.22em}
+.ticket-kicker i{width:7px;height:7px;border-radius:50%;background:#a64037}
+.ticket-copy h1{font:italic 500 clamp(56px,6.8vw,94px)/1 Baskerville,'Times New Roman',serif;letter-spacing:-.065em;margin:23px 0 8px}
+.ticket-dedication{font:16px Georgia,'Songti SC',serif;letter-spacing:.08em;margin:0}
+.count-line{margin-top:30px;padding:18px 0 16px;border-block:1px solid var(--rule)}
+#count-label,#showtime{font-size:12px;letter-spacing:.08em}
+.digits{display:flex;align-items:baseline;gap:clamp(5px,.7vw,12px);margin-top:6px}
+.digits>span{display:grid;justify-items:center}
+.digits b,.digits em{font:500 clamp(40px,4.3vw,63px)/1.1 Georgia,'Times New Roman',serif;font-variant-numeric:lining-nums tabular-nums}
+.digits em{font-size:26px;color:#ae735a}
+.digits small{font-size:10px;letter-spacing:.12em;color:#805447}
+#showtime{display:block;margin-top:14px}
+.ticket-stub{display:grid;place-items:center;writing-mode:vertical-rl;font:13px/1 'Courier New',monospace;letter-spacing:.28em;color:#794d40;border-left:2px dashed #b08c68;
+  background:radial-gradient(circle at 100% 50%,#28151a 0 5px,transparent 6px) right top/9px 23px repeat-y}
+#door-status{margin:24px 0 0;text-align:center;font:14px/1.6 Georgia,'Songti SC',serif;letter-spacing:.12em;color:#e6c6a8}
+#retry-clock{border-bottom:1px solid #c8a588}
+#premiere.opening .invitation{transform:translateY(-9px);opacity:0}
+@media(max-width:640px){
+  #premiere{padding:24px max(6vw,16px)}
+  .invitation{max-width:420px;grid-template-columns:minmax(0,1fr) 26px}
+  .projection-booth{grid-column:1/-1;height:clamp(145px,30svh,240px);background-position:center 53%}
+  .ticket-copy{padding:21px 24px 23px}
+  .ticket-copy h1{font-size:clamp(54px,13vw,72px);margin:12px 0 3px}
+  .count-line{margin-top:17px;padding:12px 0}.digits{gap:10px}
+  .digits b{font-size:clamp(39px,10vw,49px)}.ticket-stub{font-size:10px}
+  #door-status{margin-top:17px}
+}
+@media(prefers-reduced-motion:reduce){.invitation{transition:none}#premiere.opening .invitation{transform:none}}
