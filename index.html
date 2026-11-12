@@ -1,19 +1,139 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Afterglow</title>
-<style>html{background:#100c10;color:#eee2d5;font:16px/1.55 Georgia,serif}body{margin:0;display:grid;align-content:center;justify-content:center;height:100svh;background:radial-gradient(ellipse at 57% 43%,#32232a,#110f13 66%)}h1{margin:0;font:italic clamp(66px,10vw,128px) Baskerville,Georgia,serif;letter-spacing:-.07em}p{max-width:85vw}</style>
-<h1>Afterglow</h1><p role="status">Opening the screening…</p>
-<script>
-async function openFilm(){
- const part=location.hash.slice(1),status=document.querySelector('p');
- if(!part){status.textContent='Open your invitation link to watch the film.';return}
- try{
- const bytes=Uint8Array.from(atob(part.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));
- const key=await crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['decrypt']);
- const response=await fetch('screening.bin?v=ab9c09a00082');
- if(!response.ok)throw Error();
- const data=new Uint8Array(await response.arrayBuffer());
- const result=await crypto.subtle.decrypt({name:'AES-GCM',iv:data.slice(0,12)},key,data.slice(12));
- document.open();document.write(new TextDecoder().decode(result));document.close();
- }catch{status.textContent='Couldn’t open this screening. Check the full invitation link and try again.'}
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#100c10">
+<title>Afterglow — For Luran</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;background:#100c10;color:#f7ede1}body{font:15px -apple-system,BlinkMacSystemFont,Arial,sans-serif}main{height:100svh;min-height:460px;position:relative;overflow:hidden;isolation:isolate}canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-2}header,footer{position:absolute;left:6vw;right:6vw;display:flex;align-items:center;justify-content:space-between;gap:12px}header{top:5vh}footer{bottom:4vh;border-top:1px solid #efdbc740;padding-top:12px}.small,button{font:11px/1.4 'Courier New',monospace;letter-spacing:.12em;text-transform:uppercase}header b{color:#ffae76;font-size:17px;vertical-align:middle;margin-right:8px}button{color:inherit;background:none;cursor:pointer;border:0;padding:12px 4px}button:focus-visible{outline:2px solid #ffc29c;outline-offset:4px}.poster{position:absolute;left:8vw;top:45%;pointer-events:none;transition:opacity .6s}.poster h1,.end h2{font:italic 400 clamp(76px,11vw,210px)/.94 'Baskerville','Times New Roman',serif;letter-spacing:-.075em;margin:14px 0 22px}.poster p{font:italic 19px Georgia,serif;color:#dfb695}.poster button,.end button{pointer-events:auto;border-bottom:1px solid #b99479}.poster button:after{content:' ↗';margin-left:14px}.hit{position:absolute;left:59%;width:22%;height:62%;top:19%;border-radius:48%}.end{position:absolute;left:8vw;right:8vw;top:34%;text-align:center}.end h2{font-size:clamp(55px,8vw,156px)}.end p,#caption{font:italic clamp(20px,2.4vw,38px)/1.35 'Baskerville',Georgia,serif}.end p{margin:20px auto 28px;max-width:23em}#caption{position:absolute;bottom:17%;left:8%;right:8%;text-align:center;text-shadow:0 2px 8px #121019}.controls{display:flex;align-items:center;gap:16px}#line{height:1px;background:#f1ac7f;position:absolute;bottom:100%;left:0;width:0}.playing .poster{opacity:0;visibility:hidden}[hidden]{display:none!important}#sound{border:1px solid #c9baa34a;border-radius:30px;padding:9px 14px}@media(max-width:600px){.poster{left:8vw;top:auto;bottom:16%}.poster h1{font-size:clamp(70px,19vw,108px);margin:8px 0}.poster p{margin:10px 0 4px}.hit{left:49%;top:13%;height:45%;width:35%}.controls{gap:6px}header,footer{left:7vw;right:7vw}.end{top:30%}.small,button{font-size:10px}}
+
+.cover,#reel{position:absolute;inset:0;z-index:-1;background:#151014}.cover img{position:absolute;right:0;height:100%;width:56%;object-fit:contain;background:#100c10}.cover:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#100c10 28%,transparent 59%)}
+.poster{top:40%;left:7vw}.poster h1{font-weight:400}.hit{top:14%;left:52%;height:75%;width:46%;border-radius:0}.playing .cover{opacity:0}.cover{transition:opacity 1s}.end{top:33%}#reel{display:grid;place-items:center;background:radial-gradient(ellipse at center,#30262a,#100e12 77%)}#still{width:90%;height:77svh;object-fit:contain;max-width:1500px}.playing #caption{bottom:11%;font-size:clamp(18px,2.3vw,30px);filter:drop-shadow(0 1px 4px #000);padding:8px}header,footer{z-index:2}header span,#sound{filter:drop-shadow(0 1px 3px #100c10)}#sound{background:#191415b5}
+@media(max-width:600px){.cover img{width:100%;height:78%;object-fit:cover;object-position:50% 51%}.cover:after{background:linear-gradient(0deg,#100c10 17%,transparent 52%,transparent 85%,#100c1066)}.poster{top:auto;bottom:12%}.hit{left:50%;top:14%;width:49%;height:48%}#still{width:100%;height:79svh}.playing #caption{bottom:12%}.controls{gap:2px}#skip{letter-spacing:0}footer{left:4vw;right:4vw}}
+.end{top:50%;transform:translateY(-50%)}.end h2{font-size:clamp(50px,min(8vw,12vh),146px)}.end p{margin:14px auto 16px}.end button{padding:8px}
+
+.cover{z-index:0;display:flex;justify-content:flex-end;align-items:center;background:linear-gradient(100deg,#100c10,#1c1418);transition:none}
+.portrait{position:relative;aspect-ratio:3/4;width:min(56%,75svh);margin-right:max(0px,calc((56% - 75svh)/2));--flame-x:88%;--flame-y:53%}
+.cover .portrait img{display:block;position:static;width:100%;height:auto}
+.cover:after{pointer-events:none}
+.flame{position:absolute;z-index:1;left:var(--flame-x);top:var(--flame-y);width:62px;height:62px;transform:translate(-50%,-50%);padding:0;border-radius:50%;touch-action:manipulation;color:#fff0d3}
+.flame span,.flame:before{position:absolute;inset:6px;border:1.5px solid currentColor;border-radius:inherit;pointer-events:none}
+.flame span{background:#ffbf5c12;box-shadow:0 0 12px #ffd38f55;transition:transform .14s,background .14s}
+.flame:before{content:'';animation:breathe 2.6s ease-out infinite}
+@keyframes breathe{0%{transform:scale(.91);opacity:.8}85%,100%{transform:scale(1.42);opacity:0}}
+.flame:hover span,.flame:focus-visible span{transform:scale(1.1);background:#ffe0ad33}
+.flame:active span{transform:scale(.74);background:#fff1c077}
+.playing .cover{pointer-events:none;opacity:var(--intro-opacity,0);visibility:var(--intro-visibility,hidden)}
+.playing .flame:before{animation:none;opacity:0}.playing .flame span{transform:scale(var(--ring-size,1));opacity:var(--ring-opacity,0)}
+@media(max-width:600px){.cover{justify-content:center;align-items:flex-start}.portrait{width:min(100%,65svh);margin:0}.cover:after{background:linear-gradient(0deg,#100c10 17%,transparent 52%)}.poster{z-index:1}}
+@media(prefers-reduced-motion:reduce){.flame:before{animation:none;opacity:.3;transform:scale(1.16)}}
+
+#prologue{position:absolute;inset:0;width:100%;height:100%;padding:10svh 4vw 12svh;object-fit:contain;background:#100c10;pointer-events:none}
+#balloons{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}
+#balloons i{position:absolute;left:var(--x);bottom:0;width:var(--size);aspect-ratio:.82;border-radius:48% 52% 47% 49% / 43% 43% 57% 57%;background:radial-gradient(ellipse at 27% 23%,#fff1d5c9,transparent 10%),radial-gradient(ellipse at 36% 30%,var(--light),var(--mid) 37%,var(--dark) 79%,var(--light));box-shadow:inset -9px -4px 22px #260b192b;will-change:transform}
+#balloons i:before{content:'';position:absolute;top:98%;left:47%;border-bottom:9px solid var(--mid);border-left:6px solid transparent;border-right:6px solid transparent}
+#balloons i:after{content:'';position:absolute;top:100%;left:48%;width:17%;height:15svh;border-left:1px solid #ecd2b899;border-radius:50%;transform:rotate(7deg)}
+#balloons i:nth-child(1){--x:-14%;--size:49vmax;--light:#bb848e;--mid:#703541;--dark:#331a2a}
+#balloons i:nth-child(2){--x:48%;--size:37vmax;--light:#ffe7bd;--mid:#c29573;--dark:#61434e}
+#balloons i:nth-child(3){--x:81%;--size:33vmax;--light:#e6adb0;--mid:#98666d;--dark:#452a3b}
+#balloons i:nth-child(4){--x:16%;--size:46vmax;--light:#e9cbbc;--mid:#c3938c;--dark:#67434e}
+#balloons i:nth-child(5){--x:58%;--size:52vmax;--light:#c5a3af;--mid:#715263;--dark:#362234}
+
+:root{
+  color-scheme:dark;
+  --paper:#fcf0df;
+  --display:'Baskerville','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --labels:'Avenir Next',Avenir,'Helvetica Neue',Arial,sans-serif;
 }
-openFilm();
-</script></html>
+main{color:var(--paper);background:#141013}
+#reel{background:radial-gradient(ellipse at 58% 45%,var(--wash,#433038),#141114 61%,#0c0b0d 100%)}
+.cover{background:radial-gradient(ellipse at 66% 49%,#543533 0%,#23191f 38%,#110e12 78%)}
+.cover:after{background:linear-gradient(90deg,#110e1270,transparent 56%)}
+.poster h1,.end h2{font-family:var(--display);letter-spacing:-.056em;text-wrap:balance}
+.poster h1{line-height:1.02}
+.poster p,.end p,#caption{font-family:var(--display);font-weight:400}
+.poster p{font-size:clamp(18px,1.6vw,26px);color:#f3cfad}
+.small,button{font:500 11px/1.45 var(--labels);letter-spacing:.115em}
+#clock{font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:.04em}
+footer{align-items:center;border-color:#d8c5b52b}
+#scene{flex:1;min-width:0}.controls{flex-shrink:0}
+#sound{background:#1b151bcf;border-color:#dbbd9b5c}
+#reel:after{content:'';position:absolute;bottom:0;left:0;right:0;height:24%;pointer-events:none;background:linear-gradient(0deg,#110e12ee,transparent)}
+#still{border:0}
+.playing #caption{bottom:11%;margin:0 auto;max-width:42ch;line-height:1.27;text-wrap:balance;text-shadow:0 2px 7px #090709}
+@media(max-width:600px){
+ .cover:after{background:linear-gradient(0deg,#110e12 14%,#110e1280 32%,transparent 51%)}
+ .small,button{font-size:11px;letter-spacing:.07em}
+ .poster .small{letter-spacing:.14em}
+ .poster h1{margin:5px 0}
+ .poster{bottom:13%}
+ footer{left:5vw;right:5vw;gap:7px}
+ #scene{font-size:10px}.controls{gap:8px}.controls button{padding:9px 0;text-transform:none;letter-spacing:0}
+ .playing #caption{bottom:13%;font-size:clamp(18px,5vw,25px)}
+}
+#castle-clip{grid-area:1/1;width:90%;height:77svh;object-fit:contain;background:#141114}#still{grid-area:1/1}@media(max-width:600px){#castle-clip{width:100%;height:79svh}}
+
+.bear-logo{width:36px;height:30px;vertical-align:middle;margin-right:8px}
+header .small{display:inline-flex;align-items:center}
+#reel{padding:11svh 5vw 13svh}
+#spread{height:100%;width:min(100%,1320px);display:grid;gap:clamp(4px,.65vw,11px);overflow:hidden;isolation:isolate}
+#spread img{width:100%;height:100%;display:block;min-width:0;min-height:0;object-fit:cover;object-position:var(--focus,50% 50%)}
+#spread[data-layout=pair]{grid-template-columns:1fr 1fr}
+#spread[data-layout=wide]{grid-template-rows:1fr 1fr}
+#spread[data-layout=wide] img{object-fit:contain;background:#100d10}
+#spread[data-layout=triptych]{grid-template-columns:repeat(3,minmax(0,1fr))}
+#spread[data-layout=mosaic]{grid-template-columns:1.2fr 1fr;grid-template-rows:1fr 1fr}
+#spread[data-layout=mosaic] img:first-child{grid-row:span 2}
+#spread[data-layout=portrait]{width:auto;max-width:100%;aspect-ratio:3/4}
+#spread[data-layout=portrait] img{object-fit:contain}
+.playing #caption{z-index:1;bottom:9%;background:#171218e8;border-radius:2px;width:fit-content;padding:6px 14px;max-width:min(80%,52ch)}
+#caption:empty{display:none}
+@media(min-width:601px){#spread[data-layout=wide]{grid-template:1fr / 1fr 1fr}#spread[data-layout=wide] img{object-fit:cover}}
+@media(max-width:600px){#reel{padding:11svh 4vw 15svh}#spread[data-layout=pair]{grid-template-columns:1fr 1fr;align-self:center;height:min(100%,90vw)}
+#spread[data-layout=triptych]{grid-template-columns:repeat(3,minmax(0,1fr));height:min(100%,88vw)}
+#spread[data-layout=mosaic]{grid-template:1.12fr .85fr / 1fr 1fr}#spread[data-layout=mosaic] img:first-child{grid-row:auto;grid-column:span 2}
+#spread[data-layout=wide]{height:min(100%,116vw)}#spread[data-layout=wide] img{object-fit:cover}
+.playing #caption{bottom:11%;max-width:88%}.bear-logo{width:31px}}
+
+@media(max-aspect-ratio:4/3){
+ #spread[data-layout=wide]{grid-template:1fr 1fr / 1fr;width:min(100%,117svh);height:auto;max-height:100%;aspect-ratio:8/9}
+ #spread[data-layout=wide] img{object-fit:contain}
+}
+@media(min-aspect-ratio:4/3){
+ #spread[data-layout=wide]{grid-template:1fr / 1fr 1fr;height:auto;aspect-ratio:32/9;align-self:center}
+ #spread[data-layout=wide] img{object-fit:contain}
+}
+
+#spread[data-layout=solo]{grid-template: minmax(0,1fr) / minmax(0,1fr);height:100%}
+#spread[data-layout=solo] img{object-fit:contain;object-position:center}
+#spread[data-layout=prints]{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2vw,32px);padding:3%;overflow:visible}
+#spread[data-layout=prints] img{flex:0 1 auto;width:auto;height:auto;max-width:47%;max-height:93%;object-fit:contain;box-sizing:border-box;background:#f2e8d8;padding:clamp(4px,.7vw,10px);padding-bottom:clamp(14px,2.1vw,32px);box-shadow:0 8px 24px #09070a66;transform:rotate(-2deg)}
+#spread[data-layout=prints] img:nth-child(2){transform:translateY(3%) rotate(2deg)}
+#spread[data-layout=film]{position:relative;display:flex;align-items:center;justify-content:center;align-self:center;height:auto;max-height:100%;gap:5px;padding:20px 5px;background:#0b0a0b}
+#spread[data-layout=film] img{flex:1 1 0;width:0;height:auto;max-height:60svh;object-fit:contain}
+#spread[data-layout=film]:before,#spread[data-layout=film]:after{content:'';position:absolute;left:8px;right:8px;height:5px;background:repeating-linear-gradient(90deg,#ad9f8b 0 7px,transparent 7px 20px);opacity:.65}
+#spread[data-layout=film]:before{top:6px}#spread[data-layout=film]:after{bottom:6px}
+@media(max-width:600px){#spread[data-layout=prints]{flex-direction:column;gap:7px}#spread[data-layout=prints] img{max-height:46%;max-width:89%;padding:5px 5px 13px}#spread[data-layout=prints] img:nth-child(2){transform:translateX(4%) rotate(2deg)}}
+#reel{grid-template:minmax(0,1fr)/minmax(0,1fr)}
+#spread,.excerpt{grid-area:1/1}
+.excerpt{position:relative;z-index:1;width:min(100%,960px);height:100%;min-height:0;min-width:0;object-fit:contain;pointer-events:none;visibility:hidden}
+@media(min-width:601px){.playing #caption{bottom:12.5%}}
+#pool-live{width:min(100%,1320px)}
+</style>
+<main id="screen">
+<div class="cover"><div class="portrait"><img src="stills/birthday.jpg" alt="Luran beside the candle on her birthday cake last year"><button class="flame" aria-label="Touch the candle flame to start the film"><span></span></button></div></div><div id="reel" hidden><div id="spread"></div>
+<video id="greetings" class="excerpt" src="footage/greetings.mp4" playsinline preload="auto" aria-label="Birthday scenes from Betty Boop’s Birthday Party and The Little Princess"></video>
+<video id="streetlight" class="excerpt" src="footage/streetlight.mp4" playsinline muted preload="auto" aria-label="Mary smiling on a London street in About Time"></video>
+<video id="pool-live" class="excerpt" src="footage/pool-live.mp4" playsinline muted preload="auto" aria-label="Our poolside Live Photo"></video>
+<video id="hands-live" class="excerpt" src="footage/hands-live.mp4" playsinline muted preload="auto" aria-label="Our hands together"></video>
+<video id="castle-live" class="excerpt" src="footage/fireworks.mp4" playsinline muted preload="auto" aria-label="Fireworks above the castle"></video></div>
+<div id="balloons" aria-hidden="true" hidden><i></i><i></i><i></i><i></i><i></i></div>
+<header><span class="small"><svg class="bear-logo" viewBox="0 0 60 48" role="img" aria-label="Rilakkuma"><g fill="#bc854f" stroke="#48342b" stroke-width="1.8"><circle cx="10" cy="11" r="8"/><circle cx="50" cy="11" r="8"/></g><g fill="#ffe79b"><circle cx="10" cy="11" r="4.4"/><circle cx="50" cy="11" r="4.4"/></g><path fill="#bc854f" stroke="#48342b" stroke-width="1.8" d="M4 29C4 15 15 6 30 6s26 9 26 23c0 11-13 15-26 15S4 40 4 29Z"/><g fill="#30251f"><circle cx="18.5" cy="25" r="2.3"/><circle cx="41.5" cy="25" r="2.3"/></g><ellipse cx="30" cy="31.5" rx="8" ry="6" fill="#fff3da"/><ellipse cx="30" cy="29" rx="3" ry="1.9" fill="#33271f"/><path d="M30 30v2l-3 2m3-2 3 2" fill="none" stroke="#33271f" stroke-width="1.5" stroke-linecap="round"/></svg> <span id="dedication">For Luran</span></span><button id="sound" aria-pressed="true">Sound on</button></header>
+
+<section class="poster"><span class="small">Your birthday, one year ago.</span><h1>Afterglow</h1><p>Touch the candlelight to begin.</p></section>
+<div id="caption" aria-live="polite"></div>
+<section class="end" hidden><span class="small">A birthday wish</span><h2>Happy birthday,<br>Luran.</h2><p>Where shall we wander next year?</p><button id="replay">↺ &nbsp; Back to the candle</button></section>
+<footer><div id="line"></div><span class="small" id="scene">Last birthday</span><div class="controls"><button id="pause" hidden>Pause</button><button id="skip" hidden>Skip to wish ↗</button><span id="clock" class="small">00:00 / 01:48</span></div></footer>
+</main>
+<script src="film.js"></script>
+</html>
