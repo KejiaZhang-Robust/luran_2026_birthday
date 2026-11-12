@@ -10,34 +10,40 @@ const pages = [
  [5.25,'The Little Princess','solo',['screen-wish'],'','#35292b'],
  [16,'After dark','solo',['lamp'],'Where would we be when your birthday came around again?','#283747'],
  [22,'On the road','solo',['drive'],'','#373a32'],
- [25,'A little detour','solo',['cat'],'','#373a32'],
- [28,'A little detour','prints',['little-bear','bear'],'','#45303d'],
- [33,'In the frame','solo',['sign'],'','#273c32'],
- [36,'In the frame','solo',['star'],'','#273c32'],
- [39,'Graduation day','solo',['graduation'],'','#273c32'],
- [43,'In the blue','solo',['pool'],'','#233d45'],
- [46.5,'An afternoon out','solo',['park'],'','#233d45'],
- [50,'Just us','solo',['mirror'],'','#493937'],
- [53.5,'By the window','prints',['roses','flowers'],'','#493937'],
- [58,'A table for two','solo',['lunch'],'','#413630'],
- [61,'Afternoon tea','prints',['tea','cake-table'],'','#413630'],
- [66,'An evening walk','solo',['river'],'I love walking with you when neither of us has anywhere to be.','#473a35'],
- [73,'After dark','solo',['night-drinks'],'','#37283f'],
- [76,'Carousel lights','solo',['carousel'],'','#4c3025'],
- [81,'Castle lights','film',['show-blue','show-gold','show-fountains'],'','#302b47'],
- [85,'Fireworks','solo',['fireworks'],'','#302b47'],
- [89,'On film','solo',['prints'],'I keep coming back to this one.','#32313b'],
- [94,'Rilakkuma','solo',['rilakkuma'],'I hope this year is kind to you.','#25262a'],
- [97.5,'Hand in hand','solo',['hands'],'','#372f32'],
- [101.5,'This birthday','solo',['sunset'],'And on the days it isn’t, I’ll walk you home.','#42322a']
+ [25,'On the road','solo',['drive-together'],'','#373a32'],
+ [28,'Coffee on the way','solo',['coffee-stop'],'','#373a32'],
+ [31,'A little detour','solo',['cat'],'','#373a32'],
+ [34,'A little detour','prints',['little-bear','bear'],'','#45303d'],
+ [39,'In the frame','solo',['sign'],'','#273c32'],
+ [42,'In the frame','solo',['star'],'','#273c32'],
+ [45,'Graduation day','solo',['graduation'],'','#273c32'],
+ [49,'In the blue','solo',['pool'],'','#233d45'],
+ [52.5,'An afternoon out','solo',['park-together'],'','#233d45'],
+ [56,'Just us','solo',['mirror-together'],'','#493937'],
+ [59.5,'By the window','prints',['roses','flowers'],'','#493937'],
+ [64,'A table for two','solo',['lunch'],'','#413630'],
+ [67,'Afternoon tea','prints',['tea','cake-table'],'','#413630'],
+ [72,'An evening walk','solo',['river'],'I love walking with you when neither of us has anywhere to be.','#473a35'],
+ [79,'Lantern night','solo',['campus-lantern'],'','#453335'],
+ [83,'After dark','solo',['night-drinks'],'','#37283f'],
+ [86,'Carousel lights','solo',['carousel'],'','#4c3025'],
+ [91,'Castle lights','film',['show-blue','show-gold','show-fountains'],'','#302b47'],
+ [95,'Fireworks','solo',['fireworks'],'','#302b47'],
+ [99,'On film','solo',['prints'],'I keep coming back to this one.','#32313b'],
+ [104,'Rilakkuma','solo',['rilakkuma'],'I hope this year is kind to you.','#25262a'],
+ [107.5,'Hand in hand','solo',['hands'],'','#372f32'],
+ [111.5,'This birthday','solo',['sunset'],'And on the days it isn’t, I’ll walk you home.','#42322a']
 ];
-const duration=108;
+const duration=118;
 const details={
  fireworks:['Golden fireworks above the castle'],'rilakkuma':['Korilakkuma nestles against Rilakkuma'],hands:['Our hands resting together, wearing matching rings'],
  'toon-cake':['Candles on Betty Boop’s birthday cake'],'screen-wish':['A birthday gift in The Little Princess'],
  lamp:['Reading by the window at night'],drive:['Taking a photo from the passenger seat','72% 50%'],cat:['Stopping to photograph an orange cat'],
+ 'drive-together':['A selfie together in the car in the late sunlight'],'coffee-stop':['Luran holding a coffee in the car'],
+ 'campus-lantern':['Luran with a painted lantern at the Mid-Autumn Festival'],
  'little-bear':['A tiny bear in our hands'],bear:['A portrait beside a much bigger bear','32% 50%'],
  sign:['Pointing to a sign beneath the leaves','46% 48%'],star:['A chalk star above her hand','50% 34%'],graduation:['Graduation day','50% 42%'],
+ 'mirror-together':['A mirror selfie together in the warm light'],'park-together':['Standing together on the path in the park'],
  pool:['Together by the blue water'],park:['A selfie at the park'],mirror:['Together in the mirror','50% 48%'],
  roses:['A bouquet by the window','50% 72%'],flowers:['Holding the bouquet','50% 45%'],
  tea:['Afternoon tea by the window','50% 65%'],lunch:['Lunch for two','50% 58%'],'cake-table':['Two cakes and drinks','50% 65%'],
@@ -228,7 +234,7 @@ function showCredits(){
  selectExcerpt(null,0);$('#reel').hidden=true;$('.cover').style.visibility='hidden';
  $('#caption').textContent='';balloons.hidden=true;$('#skip').hidden=true;
  // Start on the sunset that closes the film, then wind back through the year.
- const photos=['sunset','drive','cat','little-bear','graduation','pool','mirror','flowers','tea','river','carousel','fireworks','hands','birthday'];
+ const photos=['sunset','drive','drive-together','coffee-stop','cat','little-bear','graduation','pool','park-together','mirror-together','flowers','tea','river','campus-lantern','carousel','fireworks','park','mirror','hands','birthday'];
  const strip=$('.film-frames');
  for(const name of photos){
    const photo=new Image();
