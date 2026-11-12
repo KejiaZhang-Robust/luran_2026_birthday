@@ -70,44 +70,16 @@ const songCue=pages.find(page=>page[3][0]==='lamp')[0];
 let elapsed=0,running=false,last=0,sound=true,pageIndex=-1;
 let inCredits=false,songStarted=false,frameRequest=0;
 
-// The label serves the About Time recording as HLS with a separate audio rendition.
-const soundtrackUrl='https://hls.universal-music.de/get?id=328726';
-let stream=null,musicUnavailable=false;
+let musicUnavailable=false;
 
 function showMusicRetry(){
  musicUnavailable=true;
  if(songStarted && sound)$('#sound').textContent='Retry music';
 }
 
-async function loadSong(){
- try{
-   const response=await fetch(soundtrackUrl,{cache:'no-store'});
-   if(!response.ok)throw Error('Music unavailable');
-   const manifest=await response.text();
-   const audioLine=manifest.split('\n').find(line=>line.startsWith('#EXT-X-MEDIA:TYPE=AUDIO,'));
-   const rendition=audioLine?.match(/URI="([^"]+)"/);
-   const url=rendition?new URL(rendition[1],response.url).href:response.url;
-   if(song.canPlayType('application/vnd.apple.mpegurl')){
-     song.src=url;
-   }else{
-     const {default:Hls}=await import('https://cdn.jsdelivr.net/npm/hls.js@1.7.4/dist/hls.light.mjs');
-     stream?.destroy();
-     stream=new Hls({enableWorker:false,backBufferLength:Infinity,maxBufferLength:180});
-     stream.on(Hls.Events.ERROR,(_event,data)=>{if(data.fatal)showMusicRetry()});
-     stream.loadSource(url);
-     stream.attachMedia(song);
-   }
-   if(running && songStarted)playSong();
- }catch{showMusicRetry()}
-}
 song.addEventListener('error',showMusicRetry);
-loadSong();
 
 function playSong(){
- if(!song.currentSrc && !song.src){
-   if(musicUnavailable)showMusicRetry();
-   return;
- }
  song.play().catch(error=>{
    if(error.name!=='AbortError')showMusicRetry();
  });
@@ -206,8 +178,8 @@ $('#pause').onclick=()=>setPaused(running);
 $('#sound').onclick=()=>{
  if(musicUnavailable && songStarted && sound){
    musicUnavailable=false;
-   if(song.error || !song.currentSrc || stream)loadSong();
-   else if(running)playSong();
+   if(song.error)song.load();
+   if(running)playSong();
  }else{sound=!sound}
  greetings.muted=song.muted=!sound;
  $('#sound').textContent='Sound '+(sound?'on':'off');
